@@ -26,3 +26,5 @@ Variables are dynamically typed, meaning you do not need to declare their type b
 
 Python is widely used in web development (Django, Flask), data science (pandas, NumPy),
 machine learning (scikit-learn, TensorFlow, PyTorch), scripting, and automation.
+
+evangels
