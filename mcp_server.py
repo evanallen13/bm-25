@@ -36,23 +36,49 @@ _index = build_index(_chunks)
 
 
 @mcp.tool()
-def search(query: str, top_n: int = 3) -> list[dict]:
-    """Return the top-N BM25 matches for *query* from the indexed markdown corpus."""
+def search(query: str, top_n: int = 5) -> dict:
+    """Look up documentation to help answer the user's prompt.
+
+    Call this whenever the user's question might be answered by the indexed
+    markdown corpus (e.g. GitHub docs, project notes). Pass a focused search
+    query derived from the user's prompt — keywords, an API name, an error
+    string, or a paraphrased question all work. Use the returned `context`
+    as reference material when composing your reply, and cite `sources` so
+    the user can verify.
+
+    Returns:
+        context: concatenated excerpts, each prefixed with its source path
+            and line range — drop this straight into your reasoning.
+        sources: structured list of {path, start_line, end_line, score} for
+            citation or follow-up reads.
+    """
     with tracer.start_as_current_span("bm25.search") as span:
         span.set_attribute("bm25.query", query)
         span.set_attribute("bm25.top_n", top_n)
         results = bm25_search(_index, _chunks, query, top_n=top_n)
         span.set_attribute("bm25.result_count", len(results))
-        return [
+
+        if not results:
+            return {
+                "context": f"No documentation matched the query {query!r}.",
+                "sources": [],
+            }
+
+        sections = [
+            f"--- {chunk.path}:{chunk.start_line}-{chunk.end_line} "
+            f"(score {score:.3f}) ---\n{chunk.text}"
+            for score, chunk in results
+        ]
+        sources = [
             {
-                "score": score,
                 "path": str(chunk.path),
                 "start_line": chunk.start_line,
                 "end_line": chunk.end_line,
-                "text": chunk.text,
+                "score": score,
             }
             for score, chunk in results
         ]
+        return {"context": "\n\n".join(sections), "sources": sources}
 
 
 if __name__ == "__main__":
