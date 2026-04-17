@@ -1,4 +1,4 @@
-name: Get Schedule
+name: Pull Data
 
 on:
   schedule:
