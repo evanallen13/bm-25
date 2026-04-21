@@ -50,6 +50,27 @@ Example client config (e.g. `~/.config/claude/mcp.json` or equivalent):
 }
 ```
 
+### Docker
+
+Build the image:
+
+```bash
+docker build -t bm25-mcp-server .
+```
+
+Configure Claude Desktop to use the containerized server (in `claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "bm25-search": {
+      "command": "docker",
+      "args": ["run", "-i", "--rm", "bm25-mcp-server"]
+    }
+  }
+}
+```
+
 ### CLI: interactive mode
 
 Run the script without arguments to enter an interactive query loop:
